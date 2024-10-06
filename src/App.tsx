@@ -1,26 +1,41 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import PocketBase, { ListResult, RecordModel } from 'pocketbase'
+import './App.css'
+import { useEffect, useState } from 'react'
+import { Car } from './types/Car'
+import { adminAuth } from './auth/adminAuth'
 
-function App() {
+const pb: PocketBase = new PocketBase('https://pocketbase-prod-production.up.railway.app')
+pb.autoCancellation(false)
+
+export function App() {
+  const [carItems, setCarItems] = useState<Car[]>([])
+
+  useEffect(() => {
+    async function getCarItems(): Promise<void> {
+      await adminAuth(pb)
+      const resultList: ListResult<RecordModel> = await pb.collection('cars').getList(1, 20, {})
+      setCarItems(resultList.items as Car[])
+    }
+
+    getCarItems()
+  }, [carItems])
+
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+      <header>
+        car ads
       </header>
+
+      <div>
+        {carItems.map(({ id, make, price }) => (
+          <div key={id}>
+            {make}: ${price.toString()}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-export default App;
+export default App
